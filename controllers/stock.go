@@ -10,6 +10,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type PostRequest struct {
+	Nama  string `json:"nama"`
+	Harga string `json:"harga"`
+}
+
 func GetStocks(c *gin.Context) {
 	db := c.MustGet("db").(*gorm.DB)
 
@@ -34,7 +39,8 @@ func GetStocks(c *gin.Context) {
 	}
 
 	//set json response
-	c.JSON(http.StatusOK, gin.H{"data": stocks})
+	// c.JSON(http.StatusOK, gin.H{"data": stocks})
+	c.JSON(http.StatusOK, stocks)
 }
 
 func GetStocksById(c *gin.Context) {
@@ -101,4 +107,48 @@ func UpdateStock(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, updatedInput)
+}
+
+func DeleteStock(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+
+	var stock models.Stock
+	if err := db.Where("id = ?", c.Param("id")).First(&stock).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
+		return
+	}
+	db.Delete(&stock)
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func FindStockByNameOrPrice(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+
+	var request PostRequest
+	var stocks []models.Stock
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	if request.Nama != "" {
+		res := db.Raw("SELECT * FROM stocks WHERE nama LIKE ?", "%"+request.Nama+"%").Scan(&stocks)
+		if res.Error != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
+			return
+		}
+	} else if request.Harga != "" {
+		res := db.Raw("SELECT * FROM stocks WHERE harga >= ?", request.Harga).Scan(&stocks)
+		if res.Error != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
+			return
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Null parameters"})
+		return
+	}
+
+	c.JSON(http.StatusOK, stocks)
 }

@@ -21,5 +21,8 @@ func SetupDB() *gorm.DB {
 		panic(err.Error())
 	}
 	// defer db.Close()
+
+	// Enable debug mode to print SQL statements
+	db = db.Debug()
 	return db
 }

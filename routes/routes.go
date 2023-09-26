@@ -28,11 +28,13 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	r.POST("/customers", controllers.CreateCustomer)
 	r.GET("/customers/:id", controllers.FindCustomer)
 	r.PATCH("/customers/:id", controllers.UpdateCustomer)
-	r.DELETE("customers/id", controllers.DeleteCustomer)
+	r.DELETE("/customers/:id", controllers.DeleteCustomer)
 
 	r.GET("/stocks", controllers.GetStocks)
 	r.POST("/stocks", controllers.CreateStock)
 	r.PATCH("/stocks/:id", controllers.UpdateStock)
+	r.DELETE("/stocks/:id", controllers.DeleteStock)
+	r.POST("/stocks/get-by-name-or-price", controllers.FindStockByNameOrPrice)
 
 	return r
 }
