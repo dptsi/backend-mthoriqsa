@@ -35,6 +35,7 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	r.PATCH("/stocks/:id", controllers.UpdateStock)
 	r.DELETE("/stocks/:id", controllers.DeleteStock)
 	r.POST("/stocks/get-by-name-or-price", controllers.FindStockByNameOrPrice)
+	r.GET("/stocks/get-by-price-range/:min/:max", controllers.FindStockByPriceRange)
 
 	return r
 }

@@ -133,20 +133,33 @@ func FindStockByNameOrPrice(c *gin.Context) {
 		return
 	}
 
+	query := "SELECT * FROM stocks"
 	if request.Nama != "" {
-		res := db.Raw("SELECT * FROM stocks WHERE nama LIKE ?", "%"+request.Nama+"%").Scan(&stocks)
-		if res.Error != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
-			return
-		}
+		query += " WHERE nama LIKE '%" + request.Nama + "%'"
 	} else if request.Harga != "" {
-		res := db.Raw("SELECT * FROM stocks WHERE harga >= ?", request.Harga).Scan(&stocks)
-		if res.Error != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
-			return
-		}
+		query += " WHERE harga >= " + request.Harga
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Null parameters"})
+		return
+	}
+
+	res := db.Raw(query).Scan(&stocks)
+	if res.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
+		return
+	}
+
+	c.JSON(http.StatusOK, stocks)
+}
+
+func FindStockByPriceRange(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+
+	var stocks []models.Stock
+
+	res := db.Raw("SELECT * FROM stocks WHERE harga >= ? AND harga <= ?", c.Param("min"), c.Param("max")).Scan(&stocks)
+	if res.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": res.Error})
 		return
 	}
 
